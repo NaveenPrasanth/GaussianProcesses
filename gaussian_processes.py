@@ -2,7 +2,9 @@ import torch
 from torch.autograd import Variable
 from torch.optim import Adam
 import numpy as np
+
 from plots import posterior_plot
+from gp_utils import *
 
 
 class GP:
@@ -32,6 +34,30 @@ class GP:
         cov_2_1 = cov22 - torch.mm(term1.T, cov12)
         return mu_2_1, cov_2_1
 
+    def _estimate_posterior_stable(self, x_test):
+        cov11 = self._kernel(self.x_data, self.x_data)
+        cov12 = self._kernel(self.x_data, x_test)
+        cov22 = self._kernel(x_test, x_test)
+        # cholesky decomposition of cov11 
+        L = cholesky(cov11)
+        A = torch.triangular_solve(cov12, L, upper=False)[0]
+        V = torch.triangular_solve(self.y_data.view(-1, 1), L, upper=False)[0]
+        # sufficient statistics
+        mu = A.t() @ V
+        cov = cov22 - A.t() @ A 
+        return mu.view(-1), cov
+
+    def _nll_stable(self):
+        cov = self._kernel(self.x_data, self.x_data)
+        L = cholesky(cov)
+        assert len(L.shape) == 2, L.shape
+        term_1 = torch.log(torch.diag(L)).sum()
+        term_2 = lstq(self.y_data, L)
+        term_2 = lstq(term_2, L.T).view(-1, 1)
+        term_2 = 0.5 * torch.mm(self.y_data.view(1, -1), term_2)
+        term_3 = 0.5 * self.x_data.size(0) * torch.log(2 * torch.FloatTensor([np.pi]))
+        return (term_1 + term_2 + term_3)
+
     def _nll_loss(self):
         cov = self._kernel(self.x_data, self.x_data)
         term_1 = 0.5 * torch.log(torch.det(cov))
@@ -40,12 +66,12 @@ class GP:
         term_3 = 0.5 * self.x_data.size(0) * torch.log(2 * torch.FloatTensor([np.pi]))
         return term_1 + term_2 + term_3
 
-    def _fit_kernel(self, epoch=10000):
+    def _fit_kernel(self, epoch=1000):
         optimizer = Adam([self.k_variance, self.k_lengthscale])
 
         for i in range(epoch):
             optimizer.zero_grad()
-            loss = self._nll_loss()
+            loss = self._nll_stable()
             if i % 100 == 0:
                 print(i, loss.item(), 'k', self.k_variance.item(), 'l', self.k_lengthscale.item())
             loss.backward()
@@ -58,12 +84,12 @@ class GP:
             self._fit_kernel()
 
     def predict(self, x_test):
-        mu, cov = self._estimate_posterior(x_test)
+        mu, cov = self._estimate_posterior_stable(x_test)
         sigma = torch.sqrt(torch.diag(cov))
         return mu, sigma
 
     def sample(self, x_test, number_of_samples=1):
-        mu, cov = self._estimate_posterior(x_test)
+        mu, cov = self._estimate_posterior_stable(x_test)
         y_pred = np.random.multivariate_normal(mean=mu.detach(), cov=cov.detach(), size=number_of_samples)
         return y_pred
 
@@ -73,7 +99,18 @@ class GP:
         high = high + (0.1*(high-low))
 
         X = torch.linspace(low, high, 100).view(-1, 1)
-        mu, cov = self._estimate_posterior(X)
-        sigma = torch.sqrt(torch.diag(cov))
-        posterior_plot(self.x_data.detach().numpy(), self.y_data.detach().numpy(), X.detach().numpy(), mu.detach().numpy(), sigma.detach().numpy())
+        mu, cov = self._estimate_posterior_stable(X)
+        diag = torch.diag(cov)
+        
+        # numerical error check
+        diag_negatives = torch.where(diag < 0., diag, -1e-10 + torch.zeros_like(diag))
+        # if torch.abs(diag_negatives).min() < 1e-4:
+        #  print('WARNING : Negative values are of high magnitude')
+        print('INFO : Highest Negative Variance', diag_negatives.max().item())
 
+        diag_clipped = torch.where(diag > 0., diag, torch.zeros_like(diag))
+        sigma = torch.sqrt(diag_clipped)
+        posterior_plot(
+            self.x_data.detach().numpy(), self.y_data.detach().numpy(),
+            X.detach().numpy(), mu.detach().numpy(), sigma.detach().numpy()
+            )
