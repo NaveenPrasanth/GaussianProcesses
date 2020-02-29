@@ -9,7 +9,7 @@ from gp import GP
 if __name__ == '__main__':
   gp = GP()
   f = lambda x: ( torch.cos(2 * x[:, 0]) + torch.sin(x[:, 1]) ).view(-1)
-  n1, n2, ny = 100, 100, 5
+  n1, n2, ny = 40, 100, 5
   domain = (-5, 5)
   X_data = torch.distributions.Uniform(
       domain[0] + 2, domain[1] - 2).sample((n1, 2))
