@@ -88,41 +88,41 @@ class GP:
             loss.item(), self.k_variance.item(), self.k_lengthscale.item()
             ))
 
-  def fit(self, x_train, y_train, is_fit_needed=True):
-      self.x_data = x_train
-      self.y_data = y_train
-      if is_fit_needed:
-          self._fit_kernel()
+  def fit(self, x_train, y_train, is_fit_needed=True, epochs=1000):
+    self.x_data = x_train
+    self.y_data = y_train
+    if is_fit_needed:
+        self._fit_kernel(epochs=epochs)
 
   def predict(self, x_test):
-      mu, cov = self._estimate_posterior_stable(x_test)
-      sigma = torch.sqrt(torch.diag(cov))
-      return mu, sigma
+    mu, cov = self._estimate_posterior_stable(x_test)
+    sigma = torch.sqrt(torch.diag(cov))
+    return mu, sigma
 
   def sample(self, x_test, number_of_samples=1):
-      mu, cov = self._estimate_posterior_stable(x_test)
-      y_pred = np.random.multivariate_normal(
-          mean=mu.detach(), cov=cov.detach(), size=number_of_samples)
-      return y_pred
+    mu, cov = self._estimate_posterior_stable(x_test)
+    y_pred = np.random.multivariate_normal(
+        mean=mu.detach(), cov=cov.detach(), size=number_of_samples)
+    return y_pred
 
   def plot(self):
-      low, high = self.x_data.min(), self.x_data.max()
-      low = low - (0.1*(high-low))
-      high = high + (0.1*(high-low))
+    low, high = self.x_data.min(), self.x_data.max()
+    low = low - (0.1*(high-low))
+    high = high + (0.1*(high-low))
 
-      X = torch.linspace(low, high, 100).view(-1, 1)
-      mu, cov = self._estimate_posterior_stable(X)
-      diag = torch.diag(cov)
-      
-      # numerical error check
-      diag_negatives = torch.where(diag < 0., diag, -1e-10 + torch.zeros_like(diag))
-      # if torch.abs(diag_negatives).min() < 1e-4:
-      #  print('WARNING : Negative values are of high magnitude')
-      print('INFO : Highest Negative Variance', diag_negatives.min().item())
+    X = torch.linspace(low, high, 100).view(-1, 1)
+    mu, cov = self._estimate_posterior_stable(X)
+    diag = torch.diag(cov)
+    
+    # numerical error check
+    diag_negatives = torch.where(diag < 0., diag, -1e-10 + torch.zeros_like(diag))
+    # if torch.abs(diag_negatives).min() < 1e-4:
+    #  print('WARNING : Negative values are of high magnitude')
+    print('INFO : Highest Negative Variance', diag_negatives.min().item())
 
-      diag_clipped = torch.where(diag > 0., diag, torch.zeros_like(diag))
-      sigma = torch.sqrt(diag_clipped)
-      posterior_plot(
-          self.x_data.detach().numpy(), self.y_data.detach().numpy(),
-          X.detach().numpy(), mu.detach().numpy(), sigma.detach().numpy()
-          )
+    diag_clipped = torch.where(diag > 0., diag, torch.zeros_like(diag))
+    sigma = torch.sqrt(diag_clipped)
+    posterior_plot(
+        self.x_data.detach().numpy(), self.y_data.detach().numpy(),
+        X.detach().numpy(), mu.detach().numpy(), sigma.detach().numpy()
+        )
