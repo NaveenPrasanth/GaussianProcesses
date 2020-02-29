@@ -2,6 +2,7 @@ import torch
 from torch.autograd import Variable
 from torch.optim import Adam
 import numpy as np
+import kernel
 
 from plots import posterior_plot
 from utils import *
@@ -19,7 +20,9 @@ class GP:
     self.kernel = kernel
 
   def _kernel(self, a, b):
-    return (self.k_variance ** 2)*torch.exp(-0.5 * (a - b.T)**2 / (self.k_lengthscale**2))
+    # return (self.k_variance ** 2)*torch.exp(-0.5 * (a - b.T)**2 / (self.k_lengthscale**2))
+    return kernel.rbf(a, b,
+        variance=self.k_variance, lengthscale=self.k_lengthscale)
 
   def _estimate_posterior(self, x_test):
     """Estimate Posterior (mu, cov) of GP conditioned on data
