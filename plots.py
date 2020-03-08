@@ -111,9 +111,9 @@ def posterior_plot(X1, y1, X2, mu, sigma):
     fig, ax1 = plt.subplots(
       nrows=1, ncols=1, figsize=(6, 6))
     # Plot the distribution of the function (mean, covariance)
-    ax1.fill_between(X2.flat,
-      mu - 2 * sigma, mu + 2 * sigma,
-      color='red', alpha=0.15, label='$2 \sigma_{2|1}$')
+    # ax1.fill_between(X2.flat,
+    #     mu - 2 * sigma, mu + 2 * sigma,
+    #     color='red', alpha=0.15, label='$2 \sigma_{2|1}$')
     ax1.plot(X2, mu, 'r-', lw=2, label='$\mu_{2|1}$')
 
     # scatter training points
@@ -128,4 +128,20 @@ def posterior_plot(X1, y1, X2, mu, sigma):
     plt.tight_layout()
     plt.show()
 
+
+def plot_gp(x, y, y_pred, sigma):
+      fig = plt.figure(figsize=(8, 6))
+      plt.xticks(np.arange(-12, max(x)+1, 6.0))
+      plt.xlim([-12.01, 12.01])
+      plt.ylim([-0.4, 1.2])
+      plt.xlabel('x', fontsize=23)
+      plt.plot(x, y, c='red', alpha=0.9)
+      plt.scatter(x, y_pred, s=4, c='#854EC0', alpha=0.5)
+      plt.fill(np.concatenate([x, x[::-1]]),
+               np.concatenate([y_pred - 1.9600 * sigma,
+                              (y_pred + 1.9600 * sigma)[::-1]]),
+               alpha=.3, fc='#ED358E', ec='None', label='95% confidence interval')
+      plt.ylabel('$\psi$', fontsize=20)
+      plt.title('Wave Function', fontsize=20)
+      plt.show()
 
