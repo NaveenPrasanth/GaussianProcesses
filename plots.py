@@ -1,13 +1,6 @@
 import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib import cm
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import matplotlib.gridspec as gridspec
-import seaborn as sns
-
-sns.set_style('darkgrid')
-np.random.seed(69)
+from monet import *
 
 
 def illustrate_kernel(k):
@@ -129,19 +122,26 @@ def posterior_plot(X1, y1, X2, mu, sigma):
     plt.show()
 
 
-def plot_gp(x, y, y_pred, sigma):
-      fig = plt.figure(figsize=(8, 6))
-      plt.xticks(np.arange(-12, max(x)+1, 6.0))
-      plt.xlim([-12.01, 12.01])
-      plt.ylim([-0.4, 1.2])
-      plt.xlabel('x', fontsize=23)
-      plt.plot(x, y, c='red', alpha=0.9)
-      plt.scatter(x, y_pred, s=4, c='#854EC0', alpha=0.5)
-      plt.fill(np.concatenate([x, x[::-1]]),
-               np.concatenate([y_pred - 1.9600 * sigma,
-                              (y_pred + 1.9600 * sigma)[::-1]]),
-               alpha=.3, fc='#ED358E', ec='None', label='95% confidence interval')
-      plt.ylabel('$\psi$', fontsize=20)
-      plt.title('Wave Function', fontsize=20)
-      plt.show()
-
+def plot_gp(x_data, y_data, mu, sigma, x_test=None, y_test=None, 
+    ax=None, xlabel='$x$', ylabel='$y$',
+    num_x_samples=30):
+  if ax is None:
+    fig = plt.figure(figsize=(7, 6))
+    ax = plt.axes()
+  ax.set_xlabel(xlabel, fontsize=13)
+  if x_test is None:
+    x_test = np.linspace(min(x_data), max(x_data), num_x_samples)
+  idx = np.arange(0, x_test.shape[0], x_test.shape[0] // num_x_samples)
+  if y_test is not None:
+    ax.plot(x_test, y_test, c=colors[2], alpha=0.9, linestyle='dashed', zorder=1)
+  ax.scatter(x_test[idx], mu[idx], s=25, c=colors[0], alpha=0.9, zorder=2)
+  ax.fill(np.concatenate([x_test, x_test[::-1]]),
+           np.concatenate([mu - 1.9600 * sigma, (mu + 1.9600 * sigma)[::-1]]),
+           alpha=.3, fc=colors[0], ec='None', label='95% confidence interval')
+  ax.set_ylabel(ylabel, fontsize=13)
+  ax.set_title('Wave Function', fontsize=13)
+  ax.set_xlim(min(x_data) - 1, max(x_data) + 1)
+  ax.set_ylim(min(mu) - 1, max(mu) + 1)
+  if y_test is not None:
+    ax.set_ylim(min(y_test) - 1, max(y_test) + 1)
+  plt.show()
