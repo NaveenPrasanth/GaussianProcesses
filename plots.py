@@ -137,6 +137,7 @@ def plot_gp(mu, sigma, x_data=None, y_data=None, x_test=None, y_test=None,
   if y_test is not None:
     ax.plot(x_test, y_test, c=colors[2], alpha=0.9, linestyle='dashed', zorder=1)
   ax.scatter(x_test[idx], mu[idx], s=25, c=colors[0], alpha=0.9, zorder=2)
+  ax.plot(x_test, mu, c=colors[0], alpha=0.9, linestyle='dashed')
   ax.fill(np.concatenate([x_test, x_test[::-1]]),
            np.concatenate([mu - 1.9600 * sigma, (mu + 1.9600 * sigma)[::-1]]),
            alpha=.3, fc=colors[0], ec='None', label='95% confidence interval')
