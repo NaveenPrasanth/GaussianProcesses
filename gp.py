@@ -4,7 +4,7 @@ from torch.optim import Adam
 import numpy as np
 import kernel
 
-from plots import posterior_plot
+from plots import plot_gp
 from utils import *
 
 from tqdm import tqdm
@@ -89,7 +89,7 @@ class GP:
                 loss.item(), self.k_variance.item(), self.k_lengthscale.item()
                 ))
 
-    def fit(self, x_train, y_train, is_fit_needed=True, epochs=10000):
+    def fit(self, x_train, y_train, is_fit_needed=True, epochs=1000):
         self.x_data = x_train
         self.y_data = y_train
         if is_fit_needed:
@@ -115,7 +115,7 @@ class GP:
             mean=mu.detach(), cov=cov.detach(), size=number_of_samples)
         return y_pred
 
-    def plot(self, X):
+    def plot(self, X, y=None):
         low, high = self.x_data.min(), self.x_data.max()
         low = low - (0.1*(high-low))
         high = high + (0.1*(high-low))
@@ -132,8 +132,9 @@ class GP:
 
         diag_clipped = torch.where(diag > 0., diag, torch.zeros_like(diag))
         sigma = torch.sqrt(diag_clipped)
-        posterior_plot(
-            self.x_data.detach().numpy(), self.y_data.detach().numpy(),
-            X.detach().numpy(), mu.detach().numpy(), sigma.detach().numpy()
+        plot_gp(
+            self.x_data.detach().numpy(), self.y_data.detach().numpy(), 
+            mu.detach().numpy(), sigma.detach().numpy(),
+            X.detach().numpy(), y_test=y,
+            num_x_samples=35
             )
-
