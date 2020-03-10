@@ -122,13 +122,15 @@ def posterior_plot(X1, y1, X2, mu, sigma):
     plt.show()
 
 
-def plot_gp(x_data, y_data, mu, sigma, x_test=None, y_test=None, 
+def plot_gp(mu, sigma, x_data=None, y_data=None, x_test=None, y_test=None, 
     ax=None, xlabel='$x$', ylabel='$y$',
     num_x_samples=30):
   if ax is None:
     fig = plt.figure(figsize=(7, 6))
     ax = plt.axes()
   ax.set_xlabel(xlabel, fontsize=13)
+  if x_data is not None and y_data is not None:
+    ax.scatter(x_data, y_data, s=35, c=colors[2], alpha=0.9, zorder=3)
   if x_test is None:
     x_test = np.linspace(min(x_data), max(x_data), num_x_samples)
   idx = np.arange(0, x_test.shape[0], x_test.shape[0] // num_x_samples)

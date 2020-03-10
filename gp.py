@@ -133,8 +133,9 @@ class GP:
         diag_clipped = torch.where(diag > 0., diag, torch.zeros_like(diag))
         sigma = torch.sqrt(diag_clipped)
         plot_gp(
-            self.x_data.detach().numpy(), self.y_data.detach().numpy(), 
             mu.detach().numpy(), sigma.detach().numpy(),
-            X.detach().numpy(), y_test=y,
+            x_data=self.x_data.detach().numpy(),
+            y_data=self.y_data.detach().numpy(),
+            x_test=X.detach().numpy(), y_test=y,
             num_x_samples=35
             )
