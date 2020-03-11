@@ -4,7 +4,7 @@ from torch.optim import Adam
 import numpy as np
 import kernel
 
-from plots import plot_gp
+from plots import plot_gp, collate_plots
 from utils import *
 
 from tqdm import tqdm
@@ -89,7 +89,7 @@ class GP:
                 loss.item(), self.k_variance.item(), self.k_lengthscale.item()
                 ))
 
-    def fit(self, x_train, y_train, is_fit_needed=True, epochs=1000):
+    def fit(self, x_train, y_train, is_fit_needed=True, epochs=100):
         self.x_data = x_train
         self.y_data = y_train
         if is_fit_needed:
@@ -115,7 +115,7 @@ class GP:
             mean=mu.detach(), cov=cov.detach(), size=number_of_samples)
         return y_pred
 
-    def plot(self, X, y=None):
+    def plot(self, X, y=None, include_cov=False):
         low, high = self.x_data.min(), self.x_data.max()
         low = low - (0.1*(high-low))
         high = high + (0.1*(high-low))
@@ -132,6 +132,7 @@ class GP:
 
         diag_clipped = torch.where(diag > 0., diag, torch.zeros_like(diag))
         sigma = torch.sqrt(diag_clipped)
+        """
         plot_gp(
             mu.detach().numpy(), sigma.detach().numpy(),
             x_data=self.x_data.detach().numpy(),
@@ -139,3 +140,8 @@ class GP:
             x_test=X.detach().numpy(), y_test=y,
             num_x_samples=35
             )
+        """
+        collate_plots(mu=mu.detach().numpy(), x_test=X.detach().numpy(),
+            cov=cov.detach().numpy(), K=self._kernel(X, X).detach().numpy(),
+            x_data=self.x_data.detach().numpy(),
+            y_data=self.y_data.detach().numpy())
