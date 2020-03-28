@@ -104,9 +104,9 @@ def posterior_plot(X1, y1, X2, mu, sigma):
     fig, ax1 = plt.subplots(
       nrows=1, ncols=1, figsize=(6, 6))
     # Plot the distribution of the function (mean, covariance)
-    # ax1.fill_between(X2.flat,
-    #     mu - 2 * sigma, mu + 2 * sigma,
-    #     color='red', alpha=0.15, label='$2 \sigma_{2|1}$')
+    ax1.fill_between(X2.flat,
+         mu - 2 * sigma, mu + 2 * sigma,
+         color='red', alpha=0.15, label='$2 \sigma_{2|1}$')
     ax1.plot(X2, mu, 'r-', lw=2, label='$\mu_{2|1}$')
 
     # scatter training points
@@ -125,26 +125,26 @@ def posterior_plot(X1, y1, X2, mu, sigma):
 def plot_gp(mu, sigma, x_data=None, y_data=None, x_test=None, y_test=None, 
     ax=None, xlabel='$x$', ylabel='$y$',
     num_x_samples=30):
-  if ax is None:
-    fig = plt.figure(figsize=(7, 6))
-    ax = plt.axes()
-  ax.set_xlabel(xlabel, fontsize=13)
-  if x_data is not None and y_data is not None:
-    ax.scatter(x_data, y_data, s=35, c=colors[2], alpha=0.9, zorder=3)
-  if x_test is None:
-    x_test = np.linspace(min(x_data), max(x_data), num_x_samples)
-  idx = np.arange(0, x_test.shape[0], x_test.shape[0] // num_x_samples)
-  if y_test is not None:
-    ax.plot(x_test, y_test, c=colors[2], alpha=0.9, linestyle='dashed', zorder=1)
-  ax.scatter(x_test[idx], mu[idx], s=25, c=colors[0], alpha=0.9, zorder=2)
-  ax.plot(x_test, mu, c=colors[0], alpha=0.9, linestyle='dashed')
-  ax.fill(np.concatenate([x_test, x_test[::-1]]),
+    if ax is None:
+        fig = plt.figure(figsize=(7, 6))
+        ax = plt.axes()
+    ax.set_xlabel(xlabel, fontsize=13)
+    if x_data is not None and y_data is not None:
+        ax.scatter(x_data, y_data, s=35, c=colors[2], alpha=0.9, zorder=3)
+    if x_test is None:
+        x_test = np.linspace(min(x_data), max(x_data), num_x_samples)
+    idx = np.arange(0, x_test.shape[0], x_test.shape[0] // num_x_samples)
+    if y_test is not None:
+        ax.plot(x_test, y_test, c=colors[2], alpha=0.9, linestyle='dashed', zorder=1)
+    ax.scatter(x_test[idx], mu[idx], s=25, c=colors[0], alpha=0.9, zorder=2)
+    ax.plot(x_test, mu, c=colors[0], alpha=0.9, linestyle='dashed')
+    ax.fill(np.concatenate([x_test, x_test[::-1]]),
            np.concatenate([mu - 1.9600 * sigma, (mu + 1.9600 * sigma)[::-1]]),
            alpha=.3, fc=colors[0], ec='None', label='95% confidence interval')
-  ax.set_ylabel(ylabel, fontsize=13)
-  ax.set_title('Wave Function', fontsize=13)
-  ax.set_xlim(min(x_data) - 1, max(x_data) + 1)
-  ax.set_ylim(min(mu) - 1, max(mu) + 1)
-  if y_test is not None:
-    ax.set_ylim(min(y_test) - 1, max(y_test) + 1)
-  plt.show()
+    ax.set_ylabel(ylabel, fontsize=13)
+    ax.set_title('Wave Function', fontsize=13)
+    ax.set_xlim(min(x_data) - 1, max(x_data) + 1)
+    ax.set_ylim(min(mu) - 1, max(mu) + 1)
+    if y_test is not None:
+        ax.set_ylim(min(y_test) - 1, max(y_test) + 1)
+    plt.show()

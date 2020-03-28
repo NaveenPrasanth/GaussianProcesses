@@ -9,7 +9,6 @@ import torch
 
 
 class InputProvider:
-    available_types = ['BEC', '1D_regression']
 
     def __init__(self):
         self.configs = self.load_config()
@@ -45,13 +44,44 @@ class InputProvider:
 
     def get_1d_regression_data(self):
         f = lambda x: (0.4 * x + torch.cos(2 * x) + torch.sin(x)).view(-1)
-        n1, n2, ny = 20, 100, 5
+        n1, n2, ny = 6, 100, 5
         domain = (-5, 5)
         x_data = torch.distributions.Uniform(
             domain[0] + 2, domain[1] - 2).sample((n1, 1))
         y_data = f(x_data)
         x_test = torch.linspace(
             domain[0], domain[1], n2).view(-1, 1)
+        y_test = f(x_test)
+        return x_data, y_data, x_test, y_test
+
+    # sin a*x
+    def get_2d_sin(self):
+        f = lambda a, x: (np.sin(a * x))
+        x = np.linspace(-5, 5, 100)
+        a = np.linspace(-3, 3, 100)
+        x_data = np.stack([x,a]).transpose()
+        y_data = f(a,x)
+        rng = np.random.RandomState(4)
+        xt = rng.uniform(-5, 5, 10)
+        at = rng.uniform(-3, 3, 10)
+        x_test = np.stack([xt, at]).transpose()
 
         return x_data, y_data, x_test
 
+    class HigherOrderPoly:
+
+        def get_higher_order_poly(self):
+            f = self.hopoly(4)
+            x_data = np.linspace(-50, 50, 200)
+            y_data = f(x_data)
+
+        def hopoly(n):
+            coeff = np.random.randint(-5, 5, (n,))
+
+            def _hopoly_fn(x):
+                _sum = 0
+                for i in range(n):
+                    _sum += coeff[-i - 1] * (x ** (i))
+                return _sum  # / _sum.max()
+
+            return _hopoly_fn

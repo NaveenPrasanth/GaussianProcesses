@@ -6,13 +6,13 @@ import kernel
 
 from plots import plot_gp
 from utils import *
-
+from torch_utils import *
 from tqdm import tqdm
 
 
 class GP:
-    k_variance = Variable(torch.FloatTensor([0.3218]), requires_grad=True)
-    k_lengthscale = Variable(torch.FloatTensor([2.4857]), requires_grad=True)
+    k_variance = Variable(torch.FloatTensor([1]), requires_grad=True)
+    k_lengthscale = Variable(torch.FloatTensor([1]), requires_grad=True)
 
     def __init__(self, kernel=None):
         self.x_data = None
@@ -54,16 +54,25 @@ class GP:
         cov = cov22 - A.t() @ A
         return mu.view(-1), cov
 
-    def _nll_stable(self):
+    def get_minibatch(self, n=100):
+        data = torch.cat((self.x_data.view(-1, torch.squeeze(self.x_data).dim()), self.y_data.view(-1, torch.squeeze(self.y_data).dim())), dim=1)
+        size = self.x_data.shape[0]
+        if n > size:
+            n = size
+        rand_rows = torch.randperm(self.x_data.shape[0])[:n]
+        random_sample = data[rand_rows,: ]
+        return random_sample[:, :2], random_sample[:, -1]
 
-        cov = self._kernel(self.x_data, self.x_data)
+    def _nll_stable(self):
+        x_data, y_data = self.get_minibatch()
+        cov = self._kernel(x_data, x_data)
         L = cholesky(cov)
         assert len(L.shape) == 2, L.shape
         term_1 = torch.log(torch.diag(L)).sum()
-        term_2 = lstq(self.y_data, L)
+        term_2 = lstq(y_data, L)
         term_2 = lstq(term_2, L.T).view(-1, 1)
-        term_2 = 0.5 * torch.mm(self.y_data.view(1, -1), term_2)
-        term_3 = 0.5 * self.x_data.size(0) * torch.log(2 * torch.FloatTensor([np.pi]))
+        term_2 = 0.5 * torch.mm(y_data.view(1, -1), term_2)
+        term_3 = 0.5 * x_data.size(0) * torch.log(2 * torch.FloatTensor([np.pi]))
         return (term_1 + term_2 + term_3)
 
     def _nll_loss(self):
@@ -137,5 +146,5 @@ class GP:
             x_data=self.x_data.detach().numpy(),
             y_data=self.y_data.detach().numpy(),
             x_test=X.detach().numpy(), y_test=y,
-            num_x_samples=35
+            num_x_samples=10
             )

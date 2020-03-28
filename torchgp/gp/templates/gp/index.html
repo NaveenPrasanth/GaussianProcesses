@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+     fetch('http://localhost:8000/session/create/')
+    .then(function(response){
+         console.log(response)
+         // response is a json string
+        //return response.json();// convert it to a pure JavaScript object
+    })
+    .then(function(data){
+         //Process Your data
+      //if (data.is_taken_email)
+      //     alert(data);
+    })
+    .catch(function(err) {
+        console.log(err);
+      });
+
+</script>
+
+</body>
+</html>

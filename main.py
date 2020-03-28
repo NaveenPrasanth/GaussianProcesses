@@ -1,13 +1,12 @@
 import matplotlib.pyplot as plt
-from torch.optim import Adam
-import torch
 import numpy as np
-import pickle
+
 from gp import GP
 import bec
-from plots import plot_gp
-from gaussian_processes_util import plot_gp_2D
 from input_provider import InputProvider
+from torch_utils import *
+
+from examples import higher_order_poly
 
 
 def sub_plot_multiple_gp(gp, sampling_func, sample_intervals, input_variables, output_variables):
@@ -31,14 +30,14 @@ def sub_plot_multiple_gp(gp, sampling_func, sample_intervals, input_variables, o
     plt.show()
 
 
-def try_1D():
+def try_1d():
 
     ip = InputProvider()
-    x_data, y_data, x_test = ip.get_1d_regression_data()
+    x_data, y_data, x_test, y_test = ip.get_1d_regression_data()
 
     gp = GP()
     gp.fit(x_data, y_data, True)
-    gp.plot(x_test)
+    gp.plot(x_test, y_test)
 
 
 def try_bec():
@@ -46,7 +45,7 @@ def try_bec():
     # get train and test data
     in_provider = InputProvider()
     harmonic_sims, tr, te, va = in_provider.get_bec_data()
-    data = bec.get_within_range(tr, g_low=30, g_high=50, n=100)
+    data = bec.get_within_range(tr, g_low=30, g_high=90, n=500)
     # data_test = te.sample(100)
 
     # get gp model and fit
@@ -67,7 +66,31 @@ def try_bec():
     # the second entry is plotted against the fixed dimension
     input_dimensions = ['g', 'x']
     out_dimensions = 'psi'
-    sub_plot_multiple_gp(gp, harmonic_sims, [5, 30, 60, 90], input_dimensions, out_dimensions)
+    sub_plot_multiple_gp(gp, harmonic_sims, np.linspace(30,90,4), input_dimensions, out_dimensions)
+
+
+def try_2d_sin():
+    ip = InputProvider()
+    x_data, y_data, x_test = ip.get_2d_sin()
+    x_data = t(x_data)
+    y_data = t(y_data)
+    x_test = t(x_test)
+
+    gp = GP()
+    gp.fit(x_data, y_data, True)
+    gp.plot(x_test)
+
+
+def try_hopoly_1d():
+    x_data, y_data, x_test, y_test = higher_order_poly.get_higher_order_poly()
+    x_data = t(x_data).view(-1,1)
+    y_data = t(y_data).view(-1,1)
+    x_test = t(x_test).view(-1,1)
+
+    gp = GP()
+    gp.fit(x_data, y_data, True)
+    gp.plot(x_test, y= y_test)
+
 
 if __name__ == '__main__':
-    try_bec()
+    try_hopoly_1d()
