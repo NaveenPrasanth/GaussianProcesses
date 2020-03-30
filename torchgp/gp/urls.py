@@ -17,10 +17,12 @@ from django.urls import path
 from . import views
 from .service import anon_session
 from .service import load_input
+from .service import compute_gp
 urlpatterns = [
     path('', views.index, name='index'),
     path('session/', anon_session.create_session_cookie, name='create_session'),
     path('uploadInput/', load_input.load_input_in_cache, name='input_loader'),
-    path('inputPeek/', load_input.peek_input, name='input_peek')
+    path('inputPeek/', load_input.peek_input, name='input_peek'),
+    path('bestEffortGP/', compute_gp.best_effort_gp, name='best_effort_gp')
 
 ]
